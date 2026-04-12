@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Ratu Kalkulator</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #eef2f7;
+      text-align: center;
+      padding: 30px;
+    }
+    .box {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      max-width: 450px;
+      margin: auto;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+    input, select {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+    }
+    button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    h3 {
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+  <h2>Ratu Kalkulator</h2>
+
+  <select id="mode">
+    <option value="mp">Hitung Kebutuhan MP</option>
+    <option value="target">Hitung Target per jam</option>
+    <option value="ot">Hitung Overtime</option>
+  </select>
+
+  <select id="mode_ot">
+    <option value="semua">Semua MP lembur</option>
+    <option value="sebagian">Sebagian MP lembur</option>
+  </select>
+
+  <input type="number" id="total" placeholder="Total Sticker">
+  <input type="number" id="mp" placeholder="Jumlah MP">
+  <input type="number" id="target" placeholder="Target per MP per jam">
+  <input type="number" id="jam" placeholder="Jam Kerja Normal">
+  <input type="number" id="mp_ot" placeholder="MP yang lembur (jika sebagian)">
+  <input type="number" id="max_ot" placeholder="Max Overtime (opsional)">
+
+  <button onclick="hitung()">Hitung</button>
+
+  <h3 id="hasil"></h3>
+</div>
+
+<script>
+function hitung() {
+  let mode = document.getElementById("mode").value;
+  let modeOT = document.getElementById("mode_ot").value;
+  let total = parseFloat(document.getElementById("total").value);
+  let mp = parseFloat(document.getElementById("mp").value);
+  let target = parseFloat(document.getElementById("target").value);
+  let jam = parseFloat(document.getElementById("jam").value);
+  let mpOT = parseFloat(document.getElementById("mp_ot").value);
+  let maxOT = parseFloat(document.getElementById("max_ot").value);
+
+  if (!total || !jam) {
+    document.getElementById("hasil").innerHTML = "Isi data minimal!";
+    return;
+  }
+
+  // MODE MP
+  if (mode === "mp") {
+    let kapasitas = target * jam;
+    let kebutuhan = total / kapasitas;
+
+    document.getElementById("hasil").innerHTML =
+      "Kapasitas 1 MP: <b>" + kapasitas + "</b><br>" +
+      "Kebutuhan MP: <b>" + Math.ceil(kebutuhan) + " orang</b>";
+  }
+
+  // MODE TARGET
+  if (mode === "target") {
+    let targetJam = total / jam;
+    let perMP = targetJam / mp;
+
+    document.getElementById("hasil").innerHTML =
+      "Target per jam: <b>" + Math.ceil(targetJam) + "</b><br>" +
+      "Target per MP/jam: <b>" + Math.ceil(perMP) + "</b>";
+  }
+
+  // MODE OVERTIME
+  if (mode === "ot") {
+    let kapasitasNormal = mp * target * jam;
+
+    if (kapasitasNormal >= total) {
+      document.getElementById("hasil").innerHTML =
+        "✅ Tidak perlu overtime";
+      return;
+    }
+
+    let sisa = total - kapasitasNormal;
+
+    let kapasitasOTperJam;
+
+    // 🔥 MODE SEMUA MP LEMBUR
+    if (modeOT === "semua") {
+      kapasitasOTperJam = mp * target;
+    }
+
+    // 🔥 MODE SEBAGIAN MP LEMBUR
+    if (modeOT === "sebagian") {
+      if (!mpOT || mpOT > mp) {
+        document.getElementById("hasil").innerHTML =
+          "Isi MP lembur dengan benar!";
+        return;
+      }
+      kapasitasOTperJam = mpOT * target;
+    }
+
+    let lemburReal = sisa / kapasitasOTperJam;
+    let jamOT = Math.floor(lemburReal);
+    let menitOT = Math.ceil((lemburReal - jamOT) * 60);
+    let lemburBulat = Math.ceil(lemburReal);
+
+    let hasil =
+      "Kapasitas normal: <b>" + kapasitasNormal + "</b><br>" +
+      "Sisa pekerjaan: <b>" + sisa + "</b><br>" +
+      "Mode lembur: <b>" + modeOT + "</b><br>" +
+      "Overtime real: <b>" + jamOT + " jam " + menitOT + " menit</b><br>" +
+      "Overtime dibulatkan: <b>" + lemburBulat + " jam</b><br>";
+
+    if (maxOT) {
+      let mpMinimal = Math.ceil(sisa / (target * maxOT));
+      hasil +=
+        "<br>🔥 Minimal MP lembur (max " + maxOT + " jam): <b>" +
+        mpMinimal + " orang</b>";
+    }
+
+    document.getElementById("hasil").innerHTML = hasil;
+  }
+}
+</script>
+
+</body>
+</html>
