@@ -1,156 +1,297 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Ratu Kalkulator</title>
-  <style>
-    body {
-      font-family: Arial;
-      background: #eef2f7;
-      text-align: center;
-      padding: 30px;
-    }
-    .box {
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-      max-width: 450px;
-      margin: auto;
-      box-shadow: 0 0 12px rgba(0,0,0,0.1);
-    }
-    input, select {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-    }
-    button {
-      padding: 10px 20px;
-      background: #007bff;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    h3 {
-      margin-top: 20px;
-      line-height: 1.6;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M1 Collection Progress</title>
+
+<style>
+body{
+font-family:Arial;
+background:#111;
+color:white;
+padding:15px;
+}
+
+.card{
+background:#222;
+padding:10px;
+margin-bottom:10px;
+border-radius:10px;
+}
+
+input,select,textarea{
+width:100%;
+padding:8px;
+margin-top:5px;
+margin-bottom:5px;
+box-sizing:border-box;
+}
+
+button{
+padding:10px;
+margin:5px;
+width:48%;
+}
+
+h2,h3{
+margin:5px 0;
+}
+</style>
+
 </head>
 <body>
 
-<div class="box">
-  <h2>Ratu Kalkulator</h2>
+<h2>M1 COLLECTION PROGRESS</h2>
 
-  <select id="mode">
-    <option value="mp">Hitung Kebutuhan MP</option>
-    <option value="target">Hitung Target per jam</option>
-    <option value="ot">Hitung Overtime</option>
-  </select>
+<select id="mode">
+<option value="collecting">Update Actual Terkini All Zone</option>
+<option value="loading">Update Actual Loading Terkini All Zone</option>
+</select>
 
-  <select id="mode_ot">
-    <option value="semua">Semua MP lembur</option>
-    <option value="sebagian">Sebagian MP lembur</option>
-  </select>
+<br><br>
 
-  <input type="number" id="total" placeholder="Total Sticker">
-  <input type="number" id="mp" placeholder="Jumlah MP">
-  <input type="number" id="target" placeholder="Target per MP per jam">
-  <input type="number" id="jam" placeholder="Jam Kerja Normal">
-  <input type="number" id="mp_ot" placeholder="MP yang lembur (jika sebagian)">
-  <input type="number" id="max_ot" placeholder="Max Overtime (opsional)">
+<label>
+<input type="checkbox" id="use12hq">
+ Gunakan Area 12HQ
+</label>
 
-  <button onclick="hitung()">Hitung</button>
+<div id="zones"></div>
 
-  <h3 id="hasil"></h3>
+<div id="hqSection" style="display:none">
+
+<h3>12HQ</h3>
+
+<div class="card">
+BB
+<textarea id="bb"></textarea>
+NF <input id="bb_nf" value="0">
+LS <input id="bb_ls" value="0">
 </div>
 
+<div class="card">
+BC
+<textarea id="bc"></textarea>
+NF <input id="bc_nf" value="0">
+LS <input id="bc_ls" value="0">
+</div>
+
+<div class="card">
+BD
+<textarea id="bd"></textarea>
+NF <input id="bd_nf" value="0">
+LS <input id="bd_ls" value="0">
+</div>
+
+<div class="card">
+BE
+<textarea id="be"></textarea>
+NF <input id="be_nf" value="0">
+LS <input id="be_ls" value="0">
+</div>
+
+</div>
+
+<button onclick="copyText()">COPY</button>
+<button onclick="exportWA()">WHATSAPP</button>
+
 <script>
-function hitung() {
-  let mode = document.getElementById("mode").value;
-  let modeOT = document.getElementById("mode_ot").value;
-  let total = parseFloat(document.getElementById("total").value);
-  let mp = parseFloat(document.getElementById("mp").value);
-  let target = parseFloat(document.getElementById("target").value);
-  let jam = parseFloat(document.getElementById("jam").value);
-  let mpOT = parseFloat(document.getElementById("mp_ot").value);
-  let maxOT = parseFloat(document.getElementById("max_ot").value);
 
-  if (!total || !jam) {
-    document.getElementById("hasil").innerHTML = "Isi data minimal!";
-    return;
-  }
+const zones = [
+"AA","AB","AC","AD",
+"BA",
+"CA","CB","CC","CD",
+"DA","DB","DC","DD",
+"GG"
+];
 
-  // MODE MP
-  if (mode === "mp") {
-    let kapasitas = target * jam;
-    let kebutuhan = total / kapasitas;
+const div = document.getElementById("zones");
 
-    document.getElementById("hasil").innerHTML =
-      "Kapasitas 1 MP: <b>" + kapasitas + "</b><br>" +
-      "Kebutuhan MP: <b>" + Math.ceil(kebutuhan) + " orang</b>";
-  }
+zones.forEach(z=>{
 
-  // MODE TARGET
-  if (mode === "target") {
-    let targetJam = total / jam;
-    let perMP = targetJam / mp;
+div.innerHTML += `
+<div class="card">
 
-    document.getElementById("hasil").innerHTML =
-      "Target per jam: <b>" + Math.ceil(targetJam) + "</b><br>" +
-      "Target per MP/jam: <b>" + Math.ceil(perMP) + "</b>";
-  }
+<b>${z}</b>
 
-  // MODE OVERTIME
-  if (mode === "ot") {
-    let kapasitasNormal = mp * target * jam;
+<select id="status_${z}">
+<option>on hand</option>
+<option>on proses</option>
+<option>done collect</option>
+<option>done loading</option>
+</select>
 
-    if (kapasitasNormal >= total) {
-      document.getElementById("hasil").innerHTML =
-        "✅ Tidak perlu overtime";
-      return;
-    }
+IB
+<input id="ib_${z}" type="number">
 
-    let sisa = total - kapasitasNormal;
+NF
+<input id="nf_${z}" value="0">
 
-    let kapasitasOTperJam;
+LS
+<input id="ls_${z}" value="0">
 
-    // 🔥 MODE SEMUA MP LEMBUR
-    if (modeOT === "semua") {
-      kapasitasOTperJam = mp * target;
-    }
+</div>
+`;
 
-    // 🔥 MODE SEBAGIAN MP LEMBUR
-    if (modeOT === "sebagian") {
-      if (!mpOT || mpOT > mp) {
-        document.getElementById("hasil").innerHTML =
-          "Isi MP lembur dengan benar!";
-        return;
-      }
-      kapasitasOTperJam = mpOT * target;
-    }
+});
 
-    let lemburReal = sisa / kapasitasOTperJam;
-    let jamOT = Math.floor(lemburReal);
-    let menitOT = Math.ceil((lemburReal - jamOT) * 60);
-    let lemburBulat = Math.ceil(lemburReal);
+document
+.getElementById("use12hq")
+.addEventListener("change",function(){
 
-    let hasil =
-      "Kapasitas normal: <b>" + kapasitasNormal + "</b><br>" +
-      "Sisa pekerjaan: <b>" + sisa + "</b><br>" +
-      "Mode lembur: <b>" + modeOT + "</b><br>" +
-      "Overtime real: <b>" + jamOT + " jam " + menitOT + " menit</b><br>" +
-      "Overtime dibulatkan: <b>" + lemburBulat + " jam</b><br>";
+document
+.getElementById("hqSection")
+.style.display =
+this.checked ? "block":"none";
 
-    if (maxOT) {
-      let mpMinimal = Math.ceil(sisa / (target * maxOT));
-      hasil +=
-        "<br>🔥 Minimal MP lembur (max " + maxOT + " jam): <b>" +
-        mpMinimal + " orang</b>";
-    }
+});
 
-    document.getElementById("hasil").innerHTML = hasil;
-  }
+function nowTime(){
+
+let d = new Date();
+
+return d.getHours().toString().padStart(2,"0")
++ ":"
++ d.getMinutes().toString().padStart(2,"0");
+
 }
+
+function zoneLine(z){
+
+let status =
+document.getElementById("status_"+z).value;
+
+let ib =
+document.getElementById("ib_"+z).value;
+
+let nf =
+document.getElementById("nf_"+z).value;
+
+let ls =
+document.getElementById("ls_"+z).value;
+
+if(status=="on hand"){
+
+return `${z}. on hand | NF ${nf} | LS ${ls}`;
+
+}
+
+if(status=="on proses"){
+
+return `${z}. ${ib} on proses | NF ${nf} | LS ${ls}`;
+
+}
+
+if(status=="done collect"){
+
+return `${z}. done collect ${nowTime()} | NF ${nf} | LS ${ls}`;
+
+}
+
+if(status=="done loading"){
+
+return `${z}. done loading ${nowTime()} | NF ${nf} | LS ${ls}`;
+
+}
+
+}
+
+function generateText(){
+
+let d = new Date();
+
+let txt = "";
+
+txt += d.getDate()+" "
++ d.toLocaleString('id-ID',{month:'long'})
++ " "
++ d.getFullYear();
+
+txt += "\n";
+
+if(
+document.getElementById("mode").value
+=="collecting"
+){
+
+txt +=
+"Update Actual Terkini All Zone Pukul "
++ nowTime();
+
+}else{
+
+txt +=
+"Update Actual Loading Terkini All Zone Pukul "
++ nowTime();
+
+}
+
+txt += "\n\n";
+
+txt += zoneLine("AA")+"\n";
+txt += zoneLine("AB")+"\n";
+txt += zoneLine("AC")+"\n";
+txt += zoneLine("AD")+"\n\n";
+
+txt += zoneLine("BA")+"\n\n";
+
+txt += zoneLine("CA")+"\n";
+txt += zoneLine("CB")+"\n";
+txt += zoneLine("CC")+"\n";
+txt += zoneLine("CD")+"\n\n";
+
+txt += zoneLine("DA")+"\n";
+txt += zoneLine("DB")+"\n";
+txt += zoneLine("DC")+"\n";
+txt += zoneLine("DD")+"\n\n";
+
+txt += zoneLine("GG")+"\n";
+
+if(
+document.getElementById("use12hq").checked
+){
+
+txt += "\n\n12HQ\n\n";
+
+["bb","bc","bd","be"].forEach(x=>{
+
+txt +=
+x.toUpperCase()
++". "
++document.getElementById(x).value
++" | NF "
++document.getElementById(x+"_nf").value
++" | LS "
++document.getElementById(x+"_ls").value
++"\n";
+
+});
+
+}
+
+return txt;
+
+}
+
+function copyText(){
+
+navigator.clipboard.writeText(
+generateText()
+);
+
+alert("Berhasil dicopy");
+
+}
+
+function exportWA(){
+
+window.open(
+"https://wa.me/?text="
++ encodeURIComponent(generateText())
+);
+
+}
+
 </script>
 
 </body>
