@@ -1,99 +1,117 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>M1 Collection Progress</title>
 
 <style>
 body{
-font-family:Arial;
-background:#111;
-color:white;
-padding:15px;
+font-family:Arial,sans-serif;
+background:#f5f5f5;
+padding:20px;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
 }
 
 .card{
-background:#222;
-padding:10px;
-margin-bottom:10px;
+background:white;
+padding:15px;
 border-radius:10px;
+margin-bottom:15px;
+box-shadow:0 2px 5px rgba(0,0,0,.1);
 }
 
-input,select,textarea{
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+gap:10px;
+}
+
+.zone{
+border:1px solid #ddd;
+padding:10px;
+border-radius:8px;
+}
+
+input,select{
 width:100%;
 padding:8px;
 margin-top:5px;
-margin-bottom:5px;
 box-sizing:border-box;
 }
 
 button{
-padding:10px;
+padding:10px 15px;
 margin:5px;
-width:48%;
+cursor:pointer;
 }
 
-h2,h3{
-margin:5px 0;
+textarea{
+width:100%;
+height:350px;
+margin-top:10px;
 }
 </style>
-
 </head>
+
 <body>
 
-<h2>M1 COLLECTION PROGRESS</h2>
+<div class="container">
 
+<div class="card">
+<h2>M1 Collection Progress</h2>
+
+<label>Mode Update</label>
 <select id="mode">
-<option value="collecting">Update Actual Terkini All Zone</option>
-<option value="loading">Update Actual Loading Terkini All Zone</option>
+<option>Update Actual Terkini All Zone</option>
+<option>Update Actual Loading Terkini All Zone</option>
 </select>
 
 <br><br>
 
+<label>Jam Update</label>
+<input type="time" id="jamUpdate">
+
+<br><br>
+
 <label>
-<input type="checkbox" id="use12hq">
+<input type="checkbox" id="showHQ">
  Gunakan Area 12HQ
 </label>
 
-<div id="zones"></div>
+</div>
 
-<div id="hqSection" style="display:none">
+<div class="card">
+
+<h3>Zona Utama</h3>
+
+<div class="grid" id="mainZones"></div>
+
+</div>
+
+<div class="card" id="hqCard" style="display:none">
 
 <h3>12HQ</h3>
 
-<div class="card">
-BB
-<textarea id="bb"></textarea>
-NF <input id="bb_nf" value="0">
-LS <input id="bb_ls" value="0">
+<div class="grid" id="hqZones"></div>
+
 </div>
 
 <div class="card">
-BC
-<textarea id="bc"></textarea>
-NF <input id="bc_nf" value="0">
-LS <input id="bc_ls" value="0">
-</div>
 
-<div class="card">
-BD
-<textarea id="bd"></textarea>
-NF <input id="bd_nf" value="0">
-LS <input id="bd_ls" value="0">
-</div>
+<button onclick="generateText()">Generate</button>
+<button onclick="copyText()">Copy</button>
+<button onclick="exportWA()">Export WhatsApp</button>
 
-<div class="card">
-BE
-<textarea id="be"></textarea>
-NF <input id="be_nf" value="0">
-LS <input id="be_ls" value="0">
-</div>
+<textarea id="output"></textarea>
 
 </div>
 
-<button onclick="copyText()">COPY</button>
-<button onclick="exportWA()">WHATSAPP</button>
+</div>
 
 <script>
 
@@ -105,58 +123,91 @@ const zones = [
 "GG"
 ];
 
-const div = document.getElementById("zones");
+const hqZones = ["BB","BC","BD","BE"];
+
+const mainDiv = document.getElementById("mainZones");
 
 zones.forEach(z=>{
 
-div.innerHTML += `
-<div class="card">
+mainDiv.innerHTML += `
+<div class="zone">
 
 <b>${z}</b>
 
 <select id="status_${z}">
-<option>on hand</option>
 <option>on proses</option>
+<option>on hand</option>
 <option>done collect</option>
 <option>done loading</option>
 </select>
 
-IB
-<input id="ib_${z}" type="number">
+<input id="ib_${z}" placeholder="IB / Sisa IB">
 
-NF
-<input id="nf_${z}" value="0">
+<input id="jam_${z}" placeholder="Jam manual contoh 11:30">
 
-LS
-<input id="ls_${z}" value="0">
+<input id="nf_${z}" type="number" value="0" placeholder="NF">
+
+<input id="ls_${z}" type="number" value="0" placeholder="LS">
 
 </div>
 `;
 
 });
 
-document
-.getElementById("use12hq")
-.addEventListener("change",function(){
+const hqDiv = document.getElementById("hqZones");
 
-document
-.getElementById("hqSection")
-.style.display =
-this.checked ? "block":"none";
+hqZones.forEach(z=>{
+
+hqDiv.innerHTML += `
+<div class="zone">
+
+<b>${z}</b>
+
+<input id="ket_${z}" placeholder="Keterangan">
+
+<input id="nfhq_${z}" value="0">
+
+<input id="lshq_${z}" value="0">
+
+</div>
+`;
 
 });
 
-function nowTime(){
+document.getElementById("showHQ").addEventListener("change",function(){
 
-let d = new Date();
+document.getElementById("hqCard").style.display =
+this.checked ? "block" : "none";
 
-return d.getHours().toString().padStart(2,"0")
-+ ":"
-+ d.getMinutes().toString().padStart(2,"0");
+});
 
-}
+function generateText(){
 
-function zoneLine(z){
+const now = new Date();
+
+const bulan = [
+"Januari","Februari","Maret","April",
+"Mei","Juni","Juli","Agustus",
+"September","Oktober","November","Desember"
+];
+
+let tanggal =
+now.getDate() + " " +
+bulan[now.getMonth()] + " " +
+now.getFullYear();
+
+let mode =
+document.getElementById("mode").value;
+
+let jamUpdate =
+document.getElementById("jamUpdate").value;
+
+let txt = "";
+
+txt += tanggal + "\n\n";
+txt += mode + " Pukul " + jamUpdate + "\n\n";
+
+function buildZone(z){
 
 let status =
 document.getElementById("status_"+z).value;
@@ -164,119 +215,99 @@ document.getElementById("status_"+z).value;
 let ib =
 document.getElementById("ib_"+z).value;
 
+let jam =
+document.getElementById("jam_"+z).value;
+
 let nf =
-document.getElementById("nf_"+z).value;
+document.getElementById("nf_"+z).value || 0;
 
 let ls =
-document.getElementById("ls_"+z).value;
+document.getElementById("ls_"+z).value || 0;
 
-if(status=="on hand"){
+if(mode.includes("Loading")){
 
-return `${z}. on hand | NF ${nf} | LS ${ls}`;
+return z + ". " + (ib || 0) + " IB";
 
 }
 
 if(status=="on proses"){
+return z + ". " + ib +
+" on proses | NF " + nf +
+" | LS " + ls;
+}
 
-return `${z}. ${ib} on proses | NF ${nf} | LS ${ls}`;
-
+if(status=="on hand"){
+return z + ". on hand | NF " +
+nf + " | LS " + ls;
 }
 
 if(status=="done collect"){
-
-return `${z}. done collect ${nowTime()} | NF ${nf} | LS ${ls}`;
-
+return z + ". done collect " +
+jam + " | NF " + nf +
+" | LS " + ls;
 }
 
 if(status=="done loading"){
-
-return `${z}. done loading ${nowTime()} | NF ${nf} | LS ${ls}`;
-
+return z + ". done loading " +
+jam + " | NF " + nf +
+" | LS " + ls;
 }
 
 }
 
-function generateText(){
+txt += buildZone("AA")+"\n";
+txt += buildZone("AB")+"\n";
+txt += buildZone("AC")+"\n";
+txt += buildZone("AD")+"\n\n";
 
-let d = new Date();
+txt += buildZone("BA")+"\n\n";
 
-let txt = "";
+txt += buildZone("CA")+"\n";
+txt += buildZone("CB")+"\n";
+txt += buildZone("CC")+"\n";
+txt += buildZone("CD")+"\n\n";
 
-txt += d.getDate()+" "
-+ d.toLocaleString('id-ID',{month:'long'})
-+ " "
-+ d.getFullYear();
+txt += buildZone("DA")+"\n";
+txt += buildZone("DB")+"\n";
+txt += buildZone("DC")+"\n";
+txt += buildZone("DD")+"\n\n";
 
-txt += "\n";
+txt += buildZone("GG")+"\n";
 
-if(
-document.getElementById("mode").value
-=="collecting"
-){
-
-txt +=
-"Update Actual Terkini All Zone Pukul "
-+ nowTime();
-
-}else{
-
-txt +=
-"Update Actual Loading Terkini All Zone Pukul "
-+ nowTime();
-
-}
-
-txt += "\n\n";
-
-txt += zoneLine("AA")+"\n";
-txt += zoneLine("AB")+"\n";
-txt += zoneLine("AC")+"\n";
-txt += zoneLine("AD")+"\n\n";
-
-txt += zoneLine("BA")+"\n\n";
-
-txt += zoneLine("CA")+"\n";
-txt += zoneLine("CB")+"\n";
-txt += zoneLine("CC")+"\n";
-txt += zoneLine("CD")+"\n\n";
-
-txt += zoneLine("DA")+"\n";
-txt += zoneLine("DB")+"\n";
-txt += zoneLine("DC")+"\n";
-txt += zoneLine("DD")+"\n\n";
-
-txt += zoneLine("GG")+"\n";
-
-if(
-document.getElementById("use12hq").checked
-){
+if(document.getElementById("showHQ").checked){
 
 txt += "\n\n12HQ\n\n";
 
-["bb","bc","bd","be"].forEach(x=>{
+hqZones.forEach(z=>{
+
+let ket =
+document.getElementById("ket_"+z).value;
+
+let nf =
+document.getElementById("nfhq_"+z).value;
+
+let ls =
+document.getElementById("lshq_"+z).value;
 
 txt +=
-x.toUpperCase()
-+". "
-+document.getElementById(x).value
-+" | NF "
-+document.getElementById(x+"_nf").value
-+" | LS "
-+document.getElementById(x+"_ls").value
-+"\n";
+z + ". " + ket +
+" | NF " + nf +
+" | LS " + ls + "\n";
 
 });
 
 }
 
-return txt;
+document.getElementById("output").value = txt;
 
 }
 
 function copyText(){
 
+generateText();
+
 navigator.clipboard.writeText(
-generateText()
+document.getElementById("output").value
 );
 
 alert("Berhasil dicopy");
@@ -285,9 +316,14 @@ alert("Berhasil dicopy");
 
 function exportWA(){
 
+generateText();
+
+let text =
+document.getElementById("output").value;
+
 window.open(
-"https://wa.me/?text="
-+ encodeURIComponent(generateText())
+"https://wa.me/?text=" +
+encodeURIComponent(text)
 );
 
 }
