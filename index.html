@@ -346,7 +346,59 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-</script>
+ function saveData(data){
+  db.ref("collectionProgress").set(data);
+}
+
+function loadData(){
+  db.ref("collectionProgress").on("value", (snapshot)=>{
+    const data = snapshot.val();
+    if(!data) return;
+
+    Object.keys(data).forEach(id=>{
+      const el = document.getElementById(id);
+      if(el){
+        if(el.type==="checkbox"){
+          el.checked = data[id];
+        }else{
+          el.value = data[id];
+        }
+      }
+    });
+  });
+}
+window.onload = function(){
+
+  loadData();
+
+  document.querySelectorAll("input, select, textarea").forEach(el=>{
+
+    el.addEventListener("change", ()=>{
+
+      let data = {};
+
+      document.querySelectorAll("input, select, textarea").forEach(i=>{
+
+        if(i.id){
+
+          if(i.type==="checkbox"){
+            data[i.id] = i.checked;
+          }else{
+            data[i.id] = i.value;
+          }
+
+        }
+
+      });
+
+      saveData(data);
+
+    });
+
+  });
+
+}; 
+</script> 
  
 </body>
 </html>
