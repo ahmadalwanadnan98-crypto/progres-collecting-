@@ -330,5 +330,23 @@ encodeURIComponent(text)
 
 </script>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAXROsUGP9AX1RIomyEA8RAh97CSD1fLnI",
+  authDomain: "m1-collection-progress.firebaseapp.com",
+  databaseURL: "https://m1-collection-progress-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "m1-collection-progress",
+  storageBucket: "m1-collection-progress.firebasestorage.app",
+  messagingSenderId: "335914520074",
+  appId: "1:335914520074:web:90a08d7e94218b356999f3"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+</script>
+ 
 </body>
 </html>
